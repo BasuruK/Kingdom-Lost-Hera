@@ -1,0 +1,127 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class LevelOneEnemyController : MonoBehaviour
+{
+    // references
+    public GameObject healthBar;
+
+    private Animator anim;
+
+    // Controllers
+    private float walk_step = 0.05f;
+    private bool first_walk = false;
+    private bool walking = false;
+    private float walk_distance = 0;
+    private RaycastHit hit = new RaycastHit();
+    private string direction;
+    private int state = 0;
+
+    // Use this for initialization
+    void Start()
+    {
+        this.anim = gameObject.GetComponent<Animator>();
+        this.walk_distance = Constant.enemy_margin_right;
+        this.anim.SetInteger("state", 1);
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        // make move towards player
+        if (!first_walk && this.walk_distance > 0)
+        {
+            this.anim.SetInteger("attack", 1);
+            this.walk_distance -= this.walk_step;
+            this.gameObject.transform.position = new Vector3(Constant.level_1_max + Constant.view_margin_right + this.walk_distance, this.gameObject.transform.position.y, this.gameObject.transform.position.z);
+            if (this.walk_distance <= 4)
+            {
+                this.anim.SetInteger("attack", 0);
+                this.anim.SetInteger("state", 0); // end walking
+            }
+            else if (this.walk_distance <= 0)
+            {
+                this.first_walk = true;
+            }
+        }
+        else
+        {
+            // do action
+            checkOpponentDistance();
+        }
+
+        //if (Input.GetKeyDown(KeyCode.K))
+        //{
+        //    Debug.Log("Pressed");
+        //    this.anim.SetInteger("state", 1);
+        //}
+
+        //if (Input.GetKeyUp(KeyCode.K))
+        //{
+        //    Debug.Log("Released");
+        //    this.anim.SetInteger("state", 0);
+        //}
+
+        //if (Input.GetKeyDown(KeyCode.L))
+        //{
+        //    Debug.Log("Walk Attack");
+        //    this.anim.SetInteger("attack", 1);
+        //}
+
+        //if (Input.GetKeyUp(KeyCode.L))
+        //{
+        //    Debug.Log("Stop Walk Attack");
+        //    this.anim.SetInteger("attack", 0);
+        //}
+
+        //if (Input.GetKey(KeyCode.J))
+        //{
+        //    Debug.Log("Attack");
+        //    this.anim.SetInteger("attack", 2);
+        //}
+
+        //if (Input.GetKeyUp(KeyCode.J))
+        //{
+        //    Debug.Log("Stop Attack");
+        //    this.anim.SetInteger("attack", 0);
+        //}
+    }
+
+    private void checkOpponentDistance()
+    {
+        if (GameObject.FindGameObjectWithTag(Constant.main_character))
+        {
+            // opponent found
+            if (Physics.Raycast(transform.position, Vector3.left, out hit, 60f))
+            {
+                if (hit.collider.gameObject.tag == Constant.main_character)
+                {
+                    state = -1;
+                }
+            }
+            if (Physics.Raycast(transform.position, Vector3.right, out hit, 60f))
+            {
+                if (hit.collider.gameObject.tag == Constant.main_character)
+                {
+                    state = +1;
+                }
+            }
+
+            if (hit.distance > Constant.p_e_gap)
+            {
+                if (!walking)
+                {
+                    walking = true;
+                    this.anim.SetInteger("state", 1); // start walking
+                }
+                // walk with player
+                this.gameObject.transform.position = new Vector3(gameObject.transform.position.x + Constant.p_e_gap , this.gameObject.transform.position.y, this.gameObject.transform.position.z);
+            }
+            else
+            {
+                this.anim.SetInteger("state", 0); // end walking
+            }
+        }
+    }
+}
